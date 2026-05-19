@@ -19,6 +19,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+
+      # Setup modern CMake version required by your build configuration
+      - name: Setup CMake
+        uses: lukka/get-cmake@latest
+        with:
+          cmakeVersion: 'latest'
+
       - name: Build the benchmark target(s)
         run: |
           mkdir build
