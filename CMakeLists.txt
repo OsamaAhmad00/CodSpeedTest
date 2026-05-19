@@ -6,7 +6,7 @@ project(CodSpeedTest)
 set(CMAKE_CXX_STANDARD 23)
 
 # Enable release mode with debug symbols to display useful profiling data
-#set(CMAKE_BUILD_TYPE RelWithDebInfo)
+set(CMAKE_BUILD_TYPE RelWithDebInfo)
 
 set(BENCHMARK_DOWNLOAD_DEPENDENCIES ON)
 
