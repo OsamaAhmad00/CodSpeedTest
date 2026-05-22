@@ -43,12 +43,10 @@ static void BM_Slower_Add(benchmark::State& state) {
     }
 }
 
-static void BM_NO_BENCHMARK(benchmark::State& state) {
-
-}
+// static void BM_NO_BENCHMARK(benchmark::State& state) { }
+// BENCHMARK(BM_NO_BENCHMARK)->Arg(100);
 
 BENCHMARK(BM_Faster_Add)->Arg(100);
-BENCHMARK(BM_NO_BENCHMARK)->Arg(100);
 BENCHMARK(BM_Slower_Add)->Arg(100);
 
 static void burn_cycles(int iterations) {
