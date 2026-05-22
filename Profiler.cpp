@@ -21,6 +21,10 @@ namespace Profiling {
 
         auto& registry_slot = profiler_array[id];
         if (registry_slot.name.empty()) {
+#ifdef CODSPEED_WALLTIME
+            registry_slot.walltime_benchmark.name = name;
+            registry_slot.walltime_benchmark.uri = name;
+#endif
             registry_slot.name = std::move(name);
             if (static_cast<size_t>(id) >= active_profiler_count) {
                 active_profiler_count = id + 1;
@@ -48,6 +52,11 @@ namespace Profiling {
         }
 
         current_state = local_state.parent;
+
+#ifdef CODSPEED_WALLTIME
+        registry_slot.walltime_benchmark.iters_per_round = { 1 };
+        registry_slot.walltime_benchmark.times_per_round_ns = { ticks_to_ns(registry_slot.inclusive_ticks) };
+#endif
     }
 
     void calibrate_tsc_frequency() {
@@ -66,8 +75,28 @@ namespace Profiling {
         tsc_frequency_hz = (static_cast<double>(tsc_ticks) / static_cast<double>(system_duration_ns)) * 1000000000.0;
     }
 
+    double ticks_to_ns(const uint64_t ticks) {
+        return static_cast<double>(ticks) / (tsc_frequency_hz / 1'000'000'000.0);
+    }
+
+    double ticks_to_us(const uint64_t ticks) {
+        return ticks_to_ns(ticks) / 1000.0;
+    }
+
     double ticks_to_ms(const uint64_t ticks) {
-        return (static_cast<double>(ticks) / tsc_frequency_hz) * 1000;
+        return ticks_to_us(ticks) / 1000.0;
+    }
+
+    void write_profile_report_json() {
+#ifdef CODSPEED_WALLTIME
+        std::vector<codspeed::RawWalltimeBenchmark> raw_benchmarks;
+        for (size_t i = 0; i < active_profiler_count; ++i) {
+            if (!profiler_array[i].name.empty()) {
+                raw_benchmarks.push_back(profiler_array[i].walltime_benchmark);
+            }
+        }
+        codspeed::generate_codspeed_walltime_report(raw_benchmarks);
+#endif
     }
 
     void print_profile_report() {

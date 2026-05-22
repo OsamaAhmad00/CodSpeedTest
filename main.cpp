@@ -84,12 +84,6 @@ static void manual_hooks_recursive_profiler(int i) {
 }
 
 int main(int argc, char **argv) {
-    Profiling::calibrate_tsc_frequency();
-
-    manual_hooks_recursive_profiler();
-
-    Profiling::print_profile_report();
-
     // BENCHMARK_MAIN --------------------------------------------------
     char arg0_default[] = "benchmark";
     char *args_default = arg0_default;
@@ -102,4 +96,9 @@ int main(int argc, char **argv) {
     benchmark::RunSpecifiedBenchmarks();
     benchmark::Shutdown();
     // -----------------------------------------------------------------
+
+    Profiling::calibrate_tsc_frequency();
+    manual_hooks_recursive_profiler();
+    Profiling::print_profile_report();
+    Profiling::write_profile_report_json();
 }

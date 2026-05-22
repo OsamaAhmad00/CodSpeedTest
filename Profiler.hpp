@@ -3,6 +3,10 @@
 #include <string>
 #include <cstdint>
 
+#ifdef CODSPEED_WALLTIME
+#include "codspeed.h"
+#endif
+
 #if defined(_MSC_VER)
     #include <intrin.h>
 #elif defined(__GNUC__) || defined(__clang__)
@@ -25,6 +29,9 @@ namespace Profiling {
         std::string name;
         uint64_t inclusive_ticks = 0;
         uint64_t exclusive_ticks = 0;
+#ifdef CODSPEED_WALLTIME
+        codspeed::RawWalltimeBenchmark walltime_benchmark;
+#endif
     };
 
     struct State {
@@ -46,7 +53,10 @@ namespace Profiling {
     };
 
     void calibrate_tsc_frequency();
-    double ticks_to_ms(const uint64_t ticks);
+    double ticks_to_ns(uint64_t ticks);
+    double ticks_to_us(uint64_t ticks);
+    double ticks_to_ms(uint64_t ticks);
+    void write_profile_report_json();
     void print_profile_report();
 }
 
@@ -64,7 +74,7 @@ namespace Profiling {
 #define PROFILER_CONCAT(x, y) PROFILER_CONCAT_INTERNAL(x, y)
 
 #define PROFILE_SCOPE_GENERATED_NAME(id_val) \
-    (std::string(__FILE__) + " [ID:" + PROFILER_STRINGIFY(id_val) + "] -> " + __FUNCTION__ + " (Line:" + PROFILER_STRINGIFY(__LINE__) + ")")
+    (std::string(__FILE__) + "::[ID:" + PROFILER_STRINGIFY(id_val) + "][Name:" + __FUNCTION__ + "][Line:" + PROFILER_STRINGIFY(__LINE__) + "]")
 
 #define PROFILE_SCOPE_DEVELOP_INTERNAL(id, line) \
     static const int PROFILER_CONCAT(profiler_id_, line) = id; \
