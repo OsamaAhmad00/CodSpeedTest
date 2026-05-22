@@ -51,18 +51,38 @@ BENCHMARK(BM_Faster_Add)->Arg(100);
 BENCHMARK(BM_NO_BENCHMARK)->Arg(100);
 BENCHMARK(BM_Slower_Add)->Arg(100);
 
-static void manual_hooks_recursive_profiler(int i = 10) {
+static void burn_cycles(int iterations) {
+    volatile int i = iterations;
+    int result = 0;
+    while (i > 0) {
+        i = i - 1;
+        result += i;
+    }
+    benchmark::DoNotOptimize(result);
+}
+
+static void manual_hooks_recursive_profiler(int i = 10);
+
+static void manual_hooks_recursive_helper(int i) {
+    burn_cycles(500000);
+    if (i > 0) {
+        manual_hooks_recursive_profiler(i - 1);
+    }
+    burn_cycles(50000);
+}
+
+static void manual_hooks_recursive_profiler(int i) {
     auto name = "main.cpp::manual_hooks_recursive_profiler";
     CODSPEED_SCOPE(name);
     NAMED_PROFILE_SCOPE(name);
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    burn_cycles(1000000);
 
     if (i > 0) {
-        manual_hooks_recursive_profiler(i - 1);
+        manual_hooks_recursive_helper(i - 1);
     }
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    burn_cycles(100000);
 }
 
 int main(int argc, char **argv) {
