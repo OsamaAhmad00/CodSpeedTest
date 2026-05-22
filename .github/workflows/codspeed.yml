@@ -20,6 +20,11 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - name: Install System Debug Dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y libc6-dbg
+
       # Setup CMake version 4.2
       - name: Setup CMake
         uses: lukka/get-cmake@latest
