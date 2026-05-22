@@ -2,6 +2,7 @@
 #include <thread>
 #include <benchmark/benchmark.h>
 
+#include "CodSpeedProfiler.hpp"
 #include "Profiler.hpp"
 
 auto get_vec(size_t n) {
@@ -51,16 +52,16 @@ BENCHMARK(BM_NO_BENCHMARK)->Arg(100);
 BENCHMARK(BM_Slower_Add)->Arg(100);
 
 static void manual_hooks_recursive_profiler(int i = 10) {
-    NAMED_PROFILE_SCOPE("Profiler: Total Function Time");
+    auto name = "main.cpp::manual_hooks_recursive_profiler";
+    CODSPEED_SCOPE(name);
+    NAMED_PROFILE_SCOPE(name);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
     if (i > 0) {
-        PROFILE_SCOPE();
         manual_hooks_recursive_profiler(i - 1);
     }
 
-    PROFILE_SCOPE();
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
 }
 
