@@ -1,4 +1,8 @@
+#include <chrono>
+#include <thread>
 #include <benchmark/benchmark.h>
+
+#include "Profiler.hpp"
 
 auto get_vec(size_t n) {
     std::vector vec(n, std::vector<int>(n));
@@ -46,4 +50,35 @@ BENCHMARK(BM_Faster_Add)->Arg(100);
 BENCHMARK(BM_NO_BENCHMARK)->Arg(100);
 BENCHMARK(BM_Slower_Add)->Arg(100);
 
-BENCHMARK_MAIN();
+static void manual_hooks_recursive_profiler(int i = 10) {
+    NAMED_PROFILE_SCOPE("Profiler: Total Function Time");
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+    if (i > 0) {
+        PROFILE_SCOPE();
+        manual_hooks_recursive_profiler(i - 1);
+    }
+
+    PROFILE_SCOPE();
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+}
+
+int main(int argc, char **argv) {
+    // BENCHMARK_MAIN --------------------------------------------------
+    char arg0_default[] = "benchmark";
+    char *args_default = arg0_default;
+    if (!argv) {
+        argc = 1;
+        argv = &args_default;
+    }
+    benchmark::Initialize(&argc, argv);
+    if (benchmark::ReportUnrecognizedArguments(argc, argv)) return 1;
+    benchmark::RunSpecifiedBenchmarks();
+    benchmark::Shutdown();
+    // -----------------------------------------------------------------
+
+    Profiling::calibrate_tsc_frequency();
+    manual_hooks_recursive_profiler();
+    Profiling::print_profile_report();
+}
