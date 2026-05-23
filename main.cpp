@@ -2,7 +2,6 @@
 #include <thread>
 #include <benchmark/benchmark.h>
 
-#include "SimulationProfiler.hpp"
 #include "WalltimeProfiler.hpp"
 
 auto get_vec(size_t n) {
@@ -62,8 +61,6 @@ static void burn_cycles(int iterations) {
 static void manual_hooks_recursive_profiler(int i = 10);
 
 static void manual_hooks_recursive_helper(int i) {
-    SIMULATION_SCOPE();
-
     burn_cycles(500000);
 
     if (i > 0) {
@@ -78,7 +75,6 @@ static void manual_hooks_recursive_helper(int i) {
 
 static void manual_hooks_recursive_profiler(int i) {
     const auto name = "main.cpp::manual_hooks_recursive_profiler";
-    SIMULATION_SCOPE();
     NAMED_WALLTIME_SCOPE(name);
 
     burn_cycles(1000000);
@@ -89,7 +85,6 @@ static void manual_hooks_recursive_profiler(int i) {
     }
 
     NAMED_WALLTIME_SCOPE("main.cpp::MainRecursionLeaf");
-    SIMULATION_SCOPE();
 
     burn_cycles(100000);
 }
