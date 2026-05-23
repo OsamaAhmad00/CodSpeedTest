@@ -2,8 +2,8 @@
 #include <thread>
 #include <benchmark/benchmark.h>
 
-#include "CodSpeedProfiler.hpp"
-#include "Profiler.hpp"
+#include "SimulationProfiler.hpp"
+#include "WalltimeProfiler.hpp"
 
 auto get_vec(size_t n) {
     std::vector vec(n, std::vector<int>(n));
@@ -62,23 +62,34 @@ static void burn_cycles(int iterations) {
 static void manual_hooks_recursive_profiler(int i = 10);
 
 static void manual_hooks_recursive_helper(int i) {
+    SIMULATION_SCOPE();
+
     burn_cycles(500000);
+
     if (i > 0) {
+        WALLTIME_SCOPE();
         manual_hooks_recursive_profiler(i - 1);
     }
+
+    NAMED_WALLTIME_SCOPE("main.cpp::HelperRecursionLeaf");
+
     burn_cycles(50000);
 }
 
 static void manual_hooks_recursive_profiler(int i) {
-    auto name = "main.cpp::manual_hooks_recursive_profiler";
-    CODSPEED_SCOPE(name);
-    NAMED_PROFILE_SCOPE(name);
+    const auto name = "main.cpp::manual_hooks_recursive_profiler";
+    SIMULATION_SCOPE();
+    NAMED_WALLTIME_SCOPE(name);
 
     burn_cycles(1000000);
 
     if (i > 0) {
+        WALLTIME_SCOPE();
         manual_hooks_recursive_helper(i - 1);
     }
+
+    NAMED_WALLTIME_SCOPE("main.cpp::MainRecursionLeaf");
+    SIMULATION_SCOPE();
 
     burn_cycles(100000);
 }

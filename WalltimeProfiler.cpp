@@ -1,7 +1,9 @@
-#include "Profiler.hpp"
+#include "WalltimeProfiler.hpp"
 #include <iostream>
 #include <chrono>
 #include <thread>
+
+#if defined(PROFILE_WALLTIME) || defined(CODSPEED_WALLTIME)
 
 namespace Profiling {
     namespace {
@@ -14,13 +16,13 @@ namespace Profiling {
 
     inline thread_local State* current_state = nullptr;
 
-    Profiler::Profiler(int id, std::string name) {
+    WalltimeProfiler::WalltimeProfiler(int id, const char* name) {
         local_state.id = id;
         local_state.children_ticks = 0;
         local_state.parent = current_state;
 
         auto& registry_slot = profiler_array[id];
-        if (registry_slot.name.empty()) {
+        if (registry_slot.name == nullptr) {
 #ifdef CODSPEED_WALLTIME
             registry_slot.walltime_benchmark.name = name;
             registry_slot.walltime_benchmark.uri = name;
@@ -37,7 +39,7 @@ namespace Profiling {
         local_state.start_ticks = get_timer();
     }
 
-    Profiler::~Profiler() {
+    WalltimeProfiler::~WalltimeProfiler() {
         uint64_t end_ticks = get_timer();
         uint64_t total_elapsed = end_ticks - local_state.start_ticks;
         uint64_t exclusive = total_elapsed - local_state.children_ticks;
@@ -75,15 +77,15 @@ namespace Profiling {
         tsc_frequency_hz = (static_cast<double>(tsc_ticks) / static_cast<double>(system_duration_ns)) * 1000000000.0;
     }
 
-    double ticks_to_ns(const uint64_t ticks) {
-        return static_cast<double>(ticks) / (tsc_frequency_hz / 1'000'000'000.0);
+    inline double ticks_to_ns(const uint64_t ticks) {
+        return ticks / (tsc_frequency_hz / 1'000'000'000.0);
     }
 
-    double ticks_to_us(const uint64_t ticks) {
+    inline double ticks_to_us(const uint64_t ticks) {
         return ticks_to_ns(ticks) / 1000.0;
     }
 
-    double ticks_to_ms(const uint64_t ticks) {
+    inline double ticks_to_ms(const uint64_t ticks) {
         return ticks_to_us(ticks) / 1000.0;
     }
 
@@ -91,7 +93,7 @@ namespace Profiling {
 #ifdef CODSPEED_WALLTIME
         std::vector<codspeed::RawWalltimeBenchmark> raw_benchmarks;
         for (size_t i = 0; i < active_profiler_count; ++i) {
-            if (!profiler_array[i].name.empty()) {
+            if (profiler_array[i].name != nullptr) {
                 raw_benchmarks.push_back(profiler_array[i].walltime_benchmark);
             }
         }
@@ -101,20 +103,37 @@ namespace Profiling {
 
     void print_profile_report() {
         std::cout << "\n========================================= PROFILER PERFORMANCE REPORT =========================================\n";
-        std::printf("%-75s | %-18s | %-18s\n", "Name", "Inc Time (ms)", "Exc Time (ms)");
+        std::printf("%-2s | %-75s | %-18s | %-18s\n", "ID", "Name", "Inc Time (ms)", "Exc Time (ms)");
         std::cout << "-------------------------------------------------------------------------------------------------------------------------------\n";
 
         for (size_t i = 0; i < active_profiler_count; ++i) {
-            if (!profiler_array[i].name.empty()) {
+            if (profiler_array[i].name != nullptr) {
                 const double inc_ms = ticks_to_ms(profiler_array[i].inclusive_ticks);
                 const double exc_ms = ticks_to_ms(profiler_array[i].exclusive_ticks);
 
-                std::printf("%-75s | %-18.4f | %-18.4f\n",
-                            profiler_array[i].name.c_str(),
-                            inc_ms,
-                            exc_ms);
+                std::printf(
+                    "%-2lu | %-75s | %-18.4f | %-18.4f\n",
+                    i,
+                    profiler_array[i].name,
+                    inc_ms,
+                    exc_ms
+                );
             }
         }
         std::cout << "===============================================================================================================================\n";
     }
 }
+
+#else
+
+namespace Profiling {
+    WalltimeProfiler::WalltimeProfiler(int, const char *) { }
+    void calibrate_tsc_frequency() { }
+    double ticks_to_ns(uint64_t) { return 0.0; }
+    double ticks_to_us(uint64_t) { return 0.0; }
+    double ticks_to_ms(uint64_t) { return 0.0; }
+    void write_profile_report_json() { }
+    void print_profile_report() { }
+}
+
+#endif
