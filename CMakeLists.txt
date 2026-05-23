@@ -6,7 +6,7 @@ project(CodSpeedTest)
 set(CMAKE_CXX_STANDARD 23)
 
 # Enable release mode with debug symbols to display useful profiling data
-#set(CMAKE_BUILD_TYPE RelWithDebInfo)
+set(CMAKE_BUILD_TYPE RelWithDebInfo)
 
 set(BENCHMARK_DOWNLOAD_DEPENDENCIES ON)
 
@@ -26,7 +26,7 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(google_benchmark)
 
-add_executable(CodSpeedTest main.cpp)
+add_executable(CodSpeedTest main.cpp Profiler.cpp)
 
 # Link your executable against the `benchmark::benchmark`, the `google_benchmark` library
 # Note: the first argument must match the first argument of the `add_executable` call

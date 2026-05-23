@@ -20,20 +20,35 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      # Setup modern CMake version required by your build configuration
+      - name: Install System Debug Dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y libc6-dbg
+
+      # Setup CMake version 4.2
       - name: Setup CMake
         uses: lukka/get-cmake@latest
         with:
-          cmakeVersion: 'latest'
+          cmakeVersion: "4.2.x"
 
-      - name: Build the benchmark target(s)
+      - name: Build the simulation benchmark target(s)
         run: |
-          mkdir build
-          cd build
-          cmake -DCODSPEED_MODE=simulation ..
-          make -j
-      - name: Run the benchmarks
+          cmake -B simulation_build -S . -DCODSPEED_MODE=simulation
+          cmake --build simulation_build -j $(nproc)
+
+      - name: Build the walltime benchmark target(s)
+        run: |
+          cmake -B walltime_build -S . -DCODSPEED_MODE=walltime
+          cmake --build walltime_build -j $(nproc)
+
+      - name: Run the simulation benchmarks
         uses: CodSpeedHQ/action@v4
         with:
           mode: simulation
-          run: ./build/CodSpeedTest
+          run: ./simulation_build/CodSpeedTest
+
+      - name: Run the walltime benchmarks
+        uses: CodSpeedHQ/action@v4
+        with:
+          mode: walltime
+          run: ./walltime_build/CodSpeedTest
