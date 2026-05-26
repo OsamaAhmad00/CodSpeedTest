@@ -89,6 +89,46 @@ static void manual_hooks_recursive_profiler(int i) {
     burn_cycles(100000);
 }
 
+struct alignas(64) Unaligned {
+    uint64_t a;
+    uint64_t b;
+};
+
+struct alignas(64) Aligned {
+    uint64_t a;
+    alignas(64) uint64_t b;
+};
+
+void increment(uint64_t& num, size_t repeats) {
+    while (repeats--) {
+        ++num;
+        benchmark::DoNotOptimize(&num);
+    }
+}
+
+template <typename Nums>
+static void BM_False_Sharing_Test(benchmark::State& state) {
+    constexpr auto repeats = 10'000;
+
+    static Nums nums { };
+
+    for (auto _ : state) {
+        if (state.thread_index() == 0) {
+            increment(nums.a, repeats);
+        } else {
+            increment(nums.b, repeats);
+        }
+    }
+}
+
+BENCHMARK_TEMPLATE(BM_False_Sharing_Test, Unaligned)
+    ->Name("Unaligned Nums")
+    ->Threads(2);
+
+BENCHMARK_TEMPLATE(BM_False_Sharing_Test, Aligned)
+    ->Name("Aligned Nums")
+    ->Threads(2);
+
 int main(int argc, char **argv) {
     // BENCHMARK_MAIN --------------------------------------------------
     char arg0_default[] = "benchmark";
