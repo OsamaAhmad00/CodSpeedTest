@@ -108,7 +108,7 @@ void increment(uint64_t& num, size_t repeats) {
 
 template <typename Nums>
 static void BM_False_Sharing_Test(benchmark::State& state) {
-    constexpr auto repeats = 10'000;
+    constexpr auto repeats = 10'000'000;
 
     static Nums nums { };
 
@@ -123,10 +123,12 @@ static void BM_False_Sharing_Test(benchmark::State& state) {
 
 BENCHMARK_TEMPLATE(BM_False_Sharing_Test, Unaligned)
     ->Name("Unaligned Nums")
+    ->Unit(benchmark::kMillisecond)
     ->Threads(2);
 
 BENCHMARK_TEMPLATE(BM_False_Sharing_Test, Aligned)
     ->Name("Aligned Nums")
+    ->Unit(benchmark::kMillisecond)
     ->Threads(2);
 
 int main(int argc, char **argv) {
