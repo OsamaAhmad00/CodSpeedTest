@@ -109,27 +109,20 @@ void increment(uint64_t& num, size_t repeats) {
 template <typename Nums>
 static void BM_False_Sharing_Test(benchmark::State& state) {
     constexpr auto repeats = 10'000'000;
-
     static Nums nums { };
-
     for (auto _ : state) {
-        if (state.thread_index() == 0) {
-            increment(nums.a, repeats);
-        } else {
-            increment(nums.b, repeats);
-        }
+        std::jthread ta { increment, std::ref(nums.a), repeats };
+        std::jthread tb { increment, std::ref(nums.b), repeats };
     }
 }
 
 BENCHMARK_TEMPLATE(BM_False_Sharing_Test, Unaligned)
     ->Name("Unaligned Nums")
-    ->Unit(benchmark::kMillisecond)
-    ->Threads(2);
+    ->Unit(benchmark::kMillisecond);
 
 BENCHMARK_TEMPLATE(BM_False_Sharing_Test, Aligned)
     ->Name("Aligned Nums")
-    ->Unit(benchmark::kMillisecond)
-    ->Threads(2);
+    ->Unit(benchmark::kMillisecond);
 
 int main(int argc, char **argv) {
     // BENCHMARK_MAIN --------------------------------------------------

@@ -14,7 +14,7 @@ FetchContent_Declare(
     google_benchmark
     GIT_REPOSITORY https://github.com/OsamaAhmad00/codspeed-cpp.git # Target the codspeed cpp repository
     SOURCE_SUBDIR google_benchmark # Make sure to target the google_benchmark subdirectory
-    GIT_TAG support-multiple-threads # Or chose a specific version or git ref, check the releases page on the repository
+    GIT_TAG main # Or chose a specific version or git ref, check the releases page on the repository
 )
 
 # Actual Google Benchmark for reference
