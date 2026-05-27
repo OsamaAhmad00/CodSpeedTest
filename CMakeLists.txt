@@ -26,7 +26,9 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(google_benchmark)
 
-add_executable(CodSpeedTest main.cpp WalltimeProfiler.cpp)
+enable_language(ASM)
+
+add_executable(CodSpeedTest main.cpp WalltimeProfiler.cpp Loops.s)
 
 # Link your executable against the `benchmark::benchmark`, the `google_benchmark` library
 # Note: the first argument must match the first argument of the `add_executable` call

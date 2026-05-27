@@ -124,6 +124,23 @@ BENCHMARK_TEMPLATE(BM_False_Sharing_Test, Aligned)
     ->Name("Aligned Nums")
     ->Unit(benchmark::kMillisecond);
 
+extern "C" void aligned_to_64(size_t n);
+extern "C" void aligned_to_63(size_t n);
+extern "C" void aligned_to_31(size_t n);
+extern "C" void aligned_to_15(size_t n);
+
+template <void(*func)(size_t)>
+static void BM_Alignment_Test(benchmark::State& state) {
+    for (auto _ : state) {
+        func(100'000'000);
+    }
+}
+
+BENCHMARK_TEMPLATE(BM_Alignment_Test, aligned_to_64)->Unit(benchmark::kMillisecond);
+BENCHMARK_TEMPLATE(BM_Alignment_Test, aligned_to_63)->Unit(benchmark::kMillisecond);
+BENCHMARK_TEMPLATE(BM_Alignment_Test, aligned_to_31)->Unit(benchmark::kMillisecond);
+BENCHMARK_TEMPLATE(BM_Alignment_Test, aligned_to_15)->Unit(benchmark::kMillisecond);
+
 int main(int argc, char **argv) {
     // BENCHMARK_MAIN --------------------------------------------------
     char arg0_default[] = "benchmark";
